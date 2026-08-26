@@ -29,11 +29,9 @@ export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>({
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
-
-  const password = watch('password');
 
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);

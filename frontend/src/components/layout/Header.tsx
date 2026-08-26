@@ -12,16 +12,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CartDrawer } from '@/components/layout/CartDrawer';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 
 export function Header() {
-  const location = useLocation();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { itemCount, openCart } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       window.location.href = `/?search=${encodeURIComponent(searchQuery)}`;

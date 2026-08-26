@@ -30,7 +30,6 @@ const checkoutSchema = z.object({
 type CheckoutForm = z.infer<typeof checkoutSchema>;
 
 export function CheckoutPage() {
-  const navigate = useNavigate();
   const { items, total, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [orderCreated, setOrderCreated] = useState(false);
@@ -77,7 +76,7 @@ export function CheckoutPage() {
     );
   }
 
-  const onSubmit = async (data: CheckoutForm) => {
+  const onSubmit = async () => {
     setIsLoading(true);
     try {
       const orderItems = items.map((item) => ({

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Calendar, Shield, Key, Loader2 } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Loader2 } from 'lucide-react';
 
 export function ProfilePage() {
   const { user, refreshUser } = useAuth();

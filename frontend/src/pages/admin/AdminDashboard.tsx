@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Package, Users, ShoppingCart, DollarSign, TrendingUp, Loader2 } from 'lucide-react';
+import { Package, Users, ShoppingCart, TrendingUp, Loader2 } from 'lucide-react';
 import { productsApi, ordersApi, usersApi, categoriesApi } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/format';
@@ -73,7 +73,7 @@ export function AdminDashboard() {
             <CardTitle>Pedidos Recentes</CardTitle>
           </CardHeader>
           <CardContent>
-            {ordersRes?.data?.data?.length > 0 ? (
+            {ordersRes?.data?.data && ordersRes.data.data.length > 0 ? (
               <div className="space-y-4">
                 {ordersRes.data.data.slice(0, 5).map((order: any) => (
                   <div key={order.id} className="flex items-center justify-between">
@@ -96,7 +96,7 @@ export function AdminDashboard() {
             <CardTitle>Produtos com Estoque Baixo</CardTitle>
           </CardHeader>
           <CardContent>
-            {productsRes?.data?.data?.length > 0 ? (
+            {productsRes?.data?.data && productsRes.data.data.length > 0 ? (
               <div className="space-y-4">
                 {productsRes.data.data.slice(0, 5).map((product: any) => (
                   <div key={product.id} className="flex items-center justify-between">

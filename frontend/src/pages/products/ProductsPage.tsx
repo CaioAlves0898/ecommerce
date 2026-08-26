@@ -1,6 +1,6 @@
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { SlidersHorizontal, X, Loader2 } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { productsApi, categoriesApi } from '@/services/api';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';

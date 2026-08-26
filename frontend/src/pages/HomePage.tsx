@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ShoppingBag, Sparkles, Truck, Shield, Headphones } from 'lucide-react';
+import { ArrowRight, Sparkles, Truck, Shield, Headphones } from 'lucide-react';
 import { productsApi } from '@/services/api';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CategoryCard } from '@/components/products/CategoryCard';
