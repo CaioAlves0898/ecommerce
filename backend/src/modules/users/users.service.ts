@@ -3,7 +3,10 @@ import prisma from '../../prisma/client';
 import { AppError } from '../../middleware/errorHandler';
 import { UpdateUserInput, ChangePasswordInput } from './users.validation';
 
-export const getUsers = async (page = 1, limit = 10, search?: string) => {
+export const getUsers = async (page: number | string = 1, limit: number | string = 10, search?: string) => {
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 10;
+
   const where = search ? {
     OR: [
       { name: { contains: search, mode: 'insensitive' as const } },
@@ -21,8 +24,8 @@ export const getUsers = async (page = 1, limit = 10, search?: string) => {
         role: true,
         createdAt: true,
       },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
       orderBy: { createdAt: 'desc' },
     }),
     prisma.user.count({ where }),
@@ -32,9 +35,9 @@ export const getUsers = async (page = 1, limit = 10, search?: string) => {
     data: users,
     meta: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
     },
   };
 };

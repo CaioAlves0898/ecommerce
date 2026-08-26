@@ -3,17 +3,11 @@ import { AppError } from '../../middleware/errorHandler';
 import { CreateProductInput, UpdateProductInput, ProductQueryInput } from './products.validation';
 
 export const getProducts = async (query: ProductQueryInput) => {
-  const {
-    page = 1,
-    limit = 10,
-    search,
-    categoryId,
-    minPrice,
-    maxPrice,
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
-    inStock,
-  } = query;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const { search, categoryId, minPrice, maxPrice, inStock } = query;
+  const sortBy = (query.sortBy as string) || 'createdAt';
+  const sortOrder = (query.sortOrder as string) || 'desc';
 
   const where: any = {};
 
@@ -46,8 +40,8 @@ export const getProducts = async (query: ProductQueryInput) => {
           select: { id: true, name: true, slug: true },
         },
       },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (Number(page) - 1) * Number(limit),
+      take: Number(limit),
       orderBy: { [sortBy]: sortOrder },
     }),
     prisma.product.count({ where }),
@@ -57,9 +51,9 @@ export const getProducts = async (query: ProductQueryInput) => {
     data: products,
     meta: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
     },
   };
 };

@@ -12,7 +12,19 @@ import ordersRoutes from './modules/orders/orders.routes';
 const app = express();
 
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      config.frontendUrl,
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.app.github.dev')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 

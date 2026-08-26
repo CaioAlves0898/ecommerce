@@ -3,7 +3,10 @@ import prisma from '../../prisma/client';
 import { AppError } from '../../middleware/errorHandler';
 import { CreateOrderInput, UpdateOrderStatusInput } from './orders.validation';
 
-export const getOrders = async (userId: string, userRole: string, page = 1, limit = 10, status?: string) => {
+export const getOrders = async (userId: string, userRole: string, page: number | string = 1, limit: number | string = 10, status?: string) => {
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 10;
+
   const where: any = {};
   
   if (userRole !== 'ADMIN') {
@@ -29,8 +32,8 @@ export const getOrders = async (userId: string, userRole: string, page = 1, limi
           },
         },
       },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
       orderBy: { createdAt: 'desc' },
     }),
     prisma.order.count({ where }),
@@ -40,9 +43,9 @@ export const getOrders = async (userId: string, userRole: string, page = 1, limi
     data: orders,
     meta: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
     },
   };
 };

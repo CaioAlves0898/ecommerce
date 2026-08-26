@@ -2,7 +2,10 @@ import prisma from '../../prisma/client';
 import { AppError } from '../../middleware/errorHandler';
 import { CreateCategoryInput, UpdateCategoryInput } from './categories.validation';
 
-export const getCategories = async (page = 1, limit = 10, search?: string) => {
+export const getCategories = async (page: number | string = 1, limit: number | string = 10, search?: string) => {
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 10;
+
   const where = search ? {
     OR: [
       { name: { contains: search, mode: 'insensitive' as const } },
@@ -16,8 +19,8 @@ export const getCategories = async (page = 1, limit = 10, search?: string) => {
       include: {
         _count: { select: { products: true } },
       },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
       orderBy: { name: 'asc' },
     }),
     prisma.category.count({ where }),
@@ -27,9 +30,9 @@ export const getCategories = async (page = 1, limit = 10, search?: string) => {
     data: categories,
     meta: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
     },
   };
 };
