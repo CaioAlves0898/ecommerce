@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/utils/format';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Pagination } from '@/components/ui/pagination';
 import { toast } from 'react-hot-toast';
 
 const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -21,10 +22,11 @@ export function AdminOrders() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['admin-orders', statusFilter],
-    queryFn: () => ordersApi.getAll({ limit: 100, status: statusFilter === 'all' ? undefined : statusFilter }),
+    queryKey: ['admin-orders', statusFilter, page],
+    queryFn: () => ordersApi.getAll({ limit: 10, page, status: statusFilter === 'all' ? undefined : statusFilter }),
   });
 
   const updateStatusMutation = useMutation({
@@ -34,6 +36,7 @@ export function AdminOrders() {
   });
 
   const orders = response?.data?.data || [];
+  const meta = response?.data?.meta;
 
   return (
     <div className="space-y-6">
@@ -99,6 +102,16 @@ export function AdminOrders() {
                 </tbody>
               </table>
             </div>
+            {meta && (
+              <div className="px-4 py-3 border-t text-sm text-muted-foreground">
+                Página {meta.page} de {meta.totalPages} · {meta.total} registro{meta.total !== 1 && 's'}
+              </div>
+            )}
+            {meta && (
+              <div className="px-4 pb-4">
+                <Pagination page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

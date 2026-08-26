@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Package, ChevronRight, Loader2 } from 'lucide-react';
@@ -6,6 +7,7 @@ import { formatCurrency, formatDate } from '@/utils/format';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 
 const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   PENDING: { label: 'Pendente', variant: 'secondary' },
@@ -16,12 +18,15 @@ const statusMap: Record<string, { label: string; variant: 'default' | 'secondary
 };
 
 export function OrdersPage() {
+  const [page, setPage] = useState(1);
+
   const { data: response, isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => ordersApi.getAll({ limit: 50 }),
+    queryKey: ['orders', page],
+    queryFn: () => ordersApi.getAll({ limit: 10, page }),
   });
 
   const orders = response?.data?.data || [];
+  const meta = response?.data?.meta;
 
   return (
     <div className="min-h-screen bg-muted/50 py-8">
@@ -44,7 +49,13 @@ export function OrdersPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <>
+            {meta && (
+              <div className="text-sm text-muted-foreground mb-4">
+                Página {meta.page} de {meta.totalPages} · {meta.total} pedido{meta.total !== 1 && 's'}
+              </div>
+            )}
+            <div className="space-y-4">
             {orders.map((order: any) => {
               const status = statusMap[order.status] || statusMap.PENDING;
               return (
@@ -71,7 +82,9 @@ export function OrdersPage() {
                 </Link>
               );
             })}
-          </div>
+            </div>
+            {meta && <Pagination page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />}
+          </>
         )}
       </div>
     </div>

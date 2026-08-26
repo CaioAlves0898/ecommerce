@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Pagination } from '@/components/ui/pagination';
 import { toast } from 'react-hot-toast';
 
 interface ProductForm {
@@ -28,10 +29,11 @@ export function AdminProducts() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const { data: productsRes, isLoading } = useQuery({
-    queryKey: ['admin-products', search],
-    queryFn: () => productsApi.getAll({ limit: 100, search }),
+    queryKey: ['admin-products', search, page],
+    queryFn: () => productsApi.getAll({ limit: 10, search, page }),
   });
 
   const { data: categoriesRes } = useQuery({
@@ -72,6 +74,7 @@ export function AdminProducts() {
   });
 
   const products = productsRes?.data?.data || [];
+  const meta = productsRes?.data?.meta;
   const categories = categoriesRes?.data?.data || [];
 
   const openCreate = () => { setForm(emptyForm); setEditingId(null); setDialogOpen(true); };
@@ -142,6 +145,16 @@ export function AdminProducts() {
                 </tbody>
               </table>
             </div>
+            {meta && (
+              <div className="px-4 py-3 border-t text-sm text-muted-foreground">
+                Página {meta.page} de {meta.totalPages} · {meta.total} registro{meta.total !== 1 && 's'}
+              </div>
+            )}
+            {meta && (
+              <div className="px-4 pb-4">
+                <Pagination page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

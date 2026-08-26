@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Menu, X, User, LogOut, Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { productsApi } from '@/services/api';
+import { formatCurrency } from '@/utils/format';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,19 +14,39 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function Header() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const { itemCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/?search=${encodeURIComponent(searchQuery)}`;
-    }
+  const debouncedSearch = searchQuery.trim().length >= 2 ? searchQuery.trim() : '';
+
+  const { data: searchResults } = useQuery({
+    queryKey: ['header-search', debouncedSearch],
+    queryFn: () => productsApi.getAll({ search: debouncedSearch, limit: 6 }),
+    enabled: !!debouncedSearch,
+  });
+
+  const searchProducts = searchResults?.data?.data || [];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleCloseSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery('');
   };
 
   return (
@@ -49,17 +72,58 @@ export function Header() {
           </div>
         </div>
 
-        <div className="flex flex-1 max-w-md mx-8">
-          <form onSubmit={handleSearch} className="relative w-full" role="search">
+        <div className="flex flex-1 max-w-md mx-8" ref={searchRef}>
+          <form onSubmit={(e) => e.preventDefault()} className="relative w-full" role="search">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               type="search"
               placeholder="Buscar produtos..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+              onFocus={() => searchQuery.trim().length >= 2 && setSearchOpen(true)}
               className="pl-10 w-full"
               aria-label="Buscar produtos"
             />
+            {searchOpen && debouncedSearch && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                {searchProducts.length > 0 ? (
+                  <>
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-xs text-muted-foreground">{searchProducts.length} resultado{searchProducts.length !== 1 && 's'} para &quot;{debouncedSearch}&quot;</p>
+                    </div>
+                    {searchProducts.map((product: any) => (
+                      <Link
+                        key={product.id}
+                        to={`/produtos/${product.id}`}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                        onClick={handleCloseSearch}
+                      >
+                        <div className="h-10 w-10 rounded bg-muted flex-shrink-0 overflow-hidden">
+                          {product.images?.[0] && (
+                            <img src={product.images[0]} alt="" className="h-full w-full object-cover" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{product.name}</p>
+                          <p className="text-sm text-primary font-semibold">{formatCurrency(product.price)}</p>
+                        </div>
+                      </Link>
+                    ))}
+                    <Link
+                      to={`/produtos?search=${encodeURIComponent(debouncedSearch)}`}
+                      className="block px-4 py-3 text-sm text-center text-primary hover:bg-muted/50 border-t"
+                      onClick={handleCloseSearch}
+                    >
+                      Ver todos os resultados
+                    </Link>
+                  </>
+                ) : (
+                  <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                    Nenhum produto encontrado
+                  </div>
+                )}
+              </div>
+            )}
           </form>
         </div>
 

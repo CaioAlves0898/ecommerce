@@ -7,15 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Pagination } from '@/components/ui/pagination';
 import { toast } from 'react-hot-toast';
 
 export function AdminUsers() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['admin-users', search],
-    queryFn: () => usersApi.getAll({ limit: 100, search }),
+    queryKey: ['admin-users', search, page],
+    queryFn: () => usersApi.getAll({ limit: 10, search, page }),
   });
 
   const deleteMutation = useMutation({
@@ -25,6 +27,7 @@ export function AdminUsers() {
   });
 
   const users = response?.data?.data || [];
+  const meta = response?.data?.meta;
 
   return (
     <div className="space-y-6">
@@ -78,6 +81,16 @@ export function AdminUsers() {
                 </tbody>
               </table>
             </div>
+            {meta && (
+              <div className="px-4 py-3 border-t text-sm text-muted-foreground">
+                Página {meta.page} de {meta.totalPages} · {meta.total} registro{meta.total !== 1 && 's'}
+              </div>
+            )}
+            {meta && (
+              <div className="px-4 pb-4">
+                <Pagination page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

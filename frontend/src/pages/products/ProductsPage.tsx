@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SlidersHorizontal } from 'lucide-react';
 import { productsApi, categoriesApi } from '@/services/api';
 import { ProductCard } from '@/components/products/ProductCard';
+import { Pagination } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,7 @@ export function ProductsPage() {
   const sortBy = searchParams.get('sortBy') || 'createdAt';
   const sortOrder = searchParams.get('sortOrder') || 'desc';
   const categoryId = searchParams.get('categoryId') || undefined;
+  const page = Number(searchParams.get('page')) || 1;
 
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -53,7 +55,8 @@ export function ProductsPage() {
     minPrice: debouncedMinPrice ? Number(debouncedMinPrice) : undefined,
     maxPrice: debouncedMaxPrice ? Number(debouncedMaxPrice) : undefined,
     inStock: debouncedInStock || undefined,
-    limit: 50,
+    page,
+    limit: 12,
   };
 
   const { data: productsResponse, isLoading } = useQuery({
@@ -65,7 +68,14 @@ export function ProductsPage() {
   });
 
   const products = productsResponse?.data?.data || [];
+  const meta = productsResponse?.data?.meta;
   const pageTitle = categoryFromSlug?.name || slug?.replace(/-/g, ' ') || 'Todos os Produtos';
+
+  const setPage = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(newPage));
+    navigate({ search: params.toString() });
+  };
 
   return (
     <div className="min-h-screen bg-muted/50">
@@ -181,11 +191,19 @@ export function ProductsPage() {
                 ))}
               </div>
             ) : products.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {products.map((product: any) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              <>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {products.map((product: any) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                {meta && (
+                  <div className="mt-4 text-sm text-muted-foreground text-center">
+                    Página {meta.page} de {meta.totalPages} · {meta.total} produto{meta.total !== 1 && 's'}
+                  </div>
+                )}
+                {meta && <Pagination page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />}
+              </>
             ) : (
               <Card>
                 <CardContent className="py-16 text-center">

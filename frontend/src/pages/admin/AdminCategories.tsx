@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Pagination } from '@/components/ui/pagination';
 import { toast } from 'react-hot-toast';
 
 interface CategoryForm { name: string; slug: string; description: string; }
@@ -18,10 +19,12 @@ export function AdminCategories() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CategoryForm>(emptyForm);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['admin-categories'],
-    queryFn: () => categoriesApi.getAll({ limit: 100 }),
+    queryKey: ['admin-categories', search, page],
+    queryFn: () => categoriesApi.getAll({ limit: 10, search, page }),
   });
 
   const createMutation = useMutation({
@@ -43,6 +46,7 @@ export function AdminCategories() {
   });
 
   const categories = response?.data?.data || [];
+  const meta = response?.data?.meta;
 
   const openCreate = () => { setForm(emptyForm); setEditingId(null); setDialogOpen(true); };
   const openEdit = (c: any) => { setForm({ name: c.name, slug: c.slug, description: c.description || '' }); setEditingId(c.id); setDialogOpen(true); };
@@ -57,6 +61,10 @@ export function AdminCategories() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Categorias</h2>
         <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Nova categoria</Button>
+      </div>
+
+      <div className="flex gap-4">
+        <Input placeholder="Buscar categoria..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="max-w-sm" />
       </div>
 
       {isLoading ? (
@@ -96,6 +104,16 @@ export function AdminCategories() {
                 </tbody>
               </table>
             </div>
+            {meta && (
+              <div className="px-4 py-3 border-t text-sm text-muted-foreground">
+                Página {meta.page} de {meta.totalPages} · {meta.total} registro{meta.total !== 1 && 's'}
+              </div>
+            )}
+            {meta && (
+              <div className="px-4 pb-4">
+                <Pagination page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
