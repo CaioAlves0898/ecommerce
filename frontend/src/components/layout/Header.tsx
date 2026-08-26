@@ -79,8 +79,8 @@ export function Header() {
           ) : isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <User className="h-5 w-5" />
+                <Button variant="ghost" className="relative h-12 w-12 rounded-full">
+                  <User className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

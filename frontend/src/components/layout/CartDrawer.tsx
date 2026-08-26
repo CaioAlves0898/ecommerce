@@ -8,31 +8,47 @@ import { Link } from 'react-router-dom';
 
 export function CartDrawer() {
   const { items, total, isOpen, closeCart, updateQuantity, removeItem, clearCart } = useCart();
-  const [mounted, setMounted] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (isOpen) {
+      setShouldRender(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+    } else {
+      setAnimate(false);
+      const timer = setTimeout(() => setShouldRender(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
-  if (!mounted) return null;
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  if (!shouldRender) return null;
 
   return (
-    <div className={cn('fixed inset-0 z-50', isOpen ? 'pointer-events-auto' : 'pointer-events-none')}>
+    <div className="fixed inset-0 z-50">
       {/* Overlay */}
       <div
         className={cn(
           'absolute inset-0 bg-black/50 transition-opacity duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0'
+          animate ? 'opacity-100' : 'opacity-0'
         )}
         onClick={closeCart}
-        aria-hidden="true"
       />
 
       {/* Drawer */}
       <div
         className={cn(
           'absolute right-0 top-0 h-full w-full max-w-sm bg-background shadow-xl transition-transform duration-300',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          animate ? 'translate-x-0' : 'translate-x-full'
         )}
         role="dialog"
         aria-label="Carrinho de compras"
