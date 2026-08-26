@@ -11,12 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CartDrawer } from '@/components/layout/CartDrawer';
 import { useState, FormEvent } from 'react';
 
 export function Header() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
-  const { itemCount, openCart } = useCart();
+  const { itemCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -65,13 +64,15 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Carrinho (${itemCount} itens)`}>
-            <ShoppingCart className="h-5 w-5" />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                {itemCount > 99 ? '99+' : itemCount}
-              </span>
-            )}
+          <Button variant="ghost" size="icon" className="relative" asChild aria-label={`Carrinho (${itemCount} itens)`}>
+            <Link to="/carrinho">
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
+            </Link>
           </Button>
 
           {isLoading ? (
@@ -158,7 +159,6 @@ export function Header() {
         </div>
       )}
 
-      <CartDrawer />
     </header>
   );
 }
