@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci
+RUN npm install
 
 COPY . .
 
@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci --only=production && npx prisma generate
+RUN npm install --omit=dev && npx prisma generate
 
 COPY --from=builder /app/dist ./dist
 
