@@ -1,26 +1,12 @@
-import { useState, useEffect } from 'react';
-import { X, Plus, Minus, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { X, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/format';
 import { Link } from 'react-router-dom';
 
 export function CartDrawer() {
   const { items, total, isOpen, closeCart, updateQuantity, removeItem, clearCart } = useCart();
-  const [shouldRender, setShouldRender] = useState(false);
-  const [animate, setAnimate] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
-    } else {
-      setAnimate(false);
-      const timer = setTimeout(() => setShouldRender(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,132 +17,124 @@ export function CartDrawer() {
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  if (!shouldRender) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
       {/* Overlay */}
       <div
-        className={cn(
-          'absolute inset-0 bg-black/50 transition-opacity duration-300',
-          animate ? 'opacity-100' : 'opacity-0'
-        )}
         onClick={closeCart}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+        }}
       />
 
       {/* Drawer */}
       <div
-        className={cn(
-          'absolute right-0 top-0 h-full w-full max-w-sm bg-background shadow-xl transition-transform duration-300',
-          animate ? 'translate-x-0' : 'translate-x-full'
-        )}
-        role="dialog"
-        aria-label="Carrinho de compras"
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          height: '100%',
+          width: '100%',
+          maxWidth: '400px',
+          backgroundColor: 'hsl(var(--background))',
+          boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b p-4">
-            <h2 className="text-lg font-semibold">Carrinho ({items.length})</h2>
-            <Button variant="ghost" size="icon" onClick={closeCart} aria-label="Fechar carrinho">
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid hsl(var(--border))' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Carrinho ({items.length})</h2>
+          <button
+            onClick={closeCart}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+          >
+            <X style={{ width: '24px', height: '24px' }} />
+          </button>
+        </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <svg className="h-16 w-16 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <p className="mt-4 text-muted-foreground">Seu carrinho está vazio</p>
-                <Button onClick={closeCart} className="mt-4">Continuar comprando</Button>
-              </div>
-            ) : (
-              <ul className="space-y-4" role="list" aria-label="Itens do carrinho">
-                {items.map((item) => (
-                  <li key={item.product.id} className="flex gap-4">
-                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-muted">
-                      {item.product.images[0] ? (
-                        <img
-                          src={item.product.images[0]}
-                          alt={item.product.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
-                          <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-1 flex-col">
-                      <div className="flex justify-between">
-                        <h3 className="text-sm font-medium line-clamp-1">{item.product.name}</h3>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItem(item.product.id)}
-                          aria-label={`Remover ${item.product.name}`}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{formatCurrency(item.product.price)}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          aria-label="Diminuir quantidade"
-                          disabled={item.quantity <= 1}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-8 text-center text-sm">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          aria-label="Aumentar quantidade"
-                          disabled={item.quantity >= item.product.stock}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                        <span className="text-xs text-muted-foreground ml-2">Estoque: {item.product.stock}</span>
-                      </div>
-                      <p className="mt-1 text-sm font-medium">{formatCurrency(item.product.price * item.quantity)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        {/* Items */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          {items.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
+              <ShoppingCart style={{ width: '64px', height: '64px', color: 'hsl(var(--muted-foreground))', marginBottom: '16px' }} />
+              <p style={{ color: 'hsl(var(--muted-foreground))', marginBottom: '16px' }}>Seu carrinho está vazio</p>
+              <Button onClick={closeCart}>Continuar comprando</Button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {items.map((item) => (
+                <div key={item.product.id} style={{ display: 'flex', gap: '12px', paddingBottom: '16px', borderBottom: '1px solid hsl(var(--border))' }}>
+                  <div style={{ width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'hsl(var(--muted))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {item.product.images[0] ? (
+                      <img src={item.product.images[0]} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <ShoppingCart style={{ width: '24px', height: '24px', color: 'hsl(var(--muted-foreground))' }} />
+                    )}
+                  </div>
 
-          {items.length > 0 && (
-            <div className="border-t p-4 space-y-4">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>{formatCurrency(total)}</span>
-              </div>
-              <div className="flex justify-between text-sm font-medium">
-                <span>Total</span>
-                <span>{formatCurrency(total)}</span>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={clearCart} className="flex-1" disabled={items.length === 0}>
-                  Limpar carrinho
-                </Button>
-                <Button className="flex-1" asChild>
-                  <Link to="/checkout">Finalizar compra</Link>
-                </Button>
-              </div>
-              <Button variant="ghost" className="w-full" onClick={closeCart}>
-                Continuar comprando
-              </Button>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <span style={{ fontWeight: 500, fontSize: '14px', lineHeight: 1.3 }}>{item.product.name}</span>
+                      <button
+                        onClick={() => removeItem(item.product.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
+                      >
+                        <Trash2 style={{ width: '16px', height: '16px', color: 'hsl(var(--muted-foreground))' }} />
+                      </button>
+                    </div>
+
+                    <span style={{ fontSize: '13px', color: 'hsl(var(--muted-foreground))' }}>{formatCurrency(item.product.price)}</span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                      <button
+                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                        style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid hsl(var(--border))', borderRadius: '4px', background: 'hsl(var(--background))', cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer', opacity: item.quantity <= 1 ? 0.5 : 1 }}
+                      >
+                        <Minus style={{ width: '14px', height: '14px' }} />
+                      </button>
+                      <span style={{ width: '32px', textAlign: 'center', fontSize: '14px', fontWeight: 500 }}>{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        disabled={item.quantity >= item.product.stock}
+                        style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid hsl(var(--border))', borderRadius: '4px', background: 'hsl(var(--background))', cursor: item.quantity >= item.product.stock ? 'not-allowed' : 'pointer', opacity: item.quantity >= item.product.stock ? 0.5 : 1 }}
+                      >
+                        <Plus style={{ width: '14px', height: '14px' }} />
+                      </button>
+                    </div>
+
+                    <span style={{ fontWeight: 600, fontSize: '14px', marginTop: '4px' }}>{formatCurrency(item.product.price * item.quantity)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        {items.length > 0 && (
+          <div style={{ borderTop: '1px solid hsl(var(--border))', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span style={{ color: 'hsl(var(--muted-foreground))' }}>Subtotal</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 600 }}>
+              <span>Total</span>
+              <span style={{ color: 'hsl(var(--primary))' }}>{formatCurrency(total)}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button variant="outline" onClick={clearCart} style={{ flex: 1 }}>Limpar</Button>
+              <Button onClick={closeCart} asChild style={{ flex: 1 }}>
+                <Link to="/checkout">Finalizar</Link>
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
