@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { SlidersHorizontal } from 'lucide-react';
@@ -8,7 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export function ProductsPage() {
   const [searchParams] = useSearchParams();
@@ -19,11 +30,13 @@ export function ProductsPage() {
   const sortOrder = searchParams.get('sortOrder') || 'desc';
   const categoryId = searchParams.get('categoryId') || undefined;
 
-  const [filters, setFilters] = useState({
-    minPrice: '',
-    maxPrice: '',
-    inStock: false,
-  });
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [inStock, setInStock] = useState(false);
+
+  const debouncedMinPrice = useDebounce(minPrice, 500);
+  const debouncedMaxPrice = useDebounce(maxPrice, 500);
+  const debouncedInStock = useDebounce(inStock, 300);
 
   const { data: categoryData } = useQuery({
     queryKey: ['categories'],
@@ -32,21 +45,23 @@ export function ProductsPage() {
 
   const categoryFromSlug = categoryData?.data?.data?.find((c: any) => c.slug === slug);
 
+  const queryFilters = {
+    search,
+    sortBy,
+    sortOrder,
+    categoryId,
+    minPrice: debouncedMinPrice ? Number(debouncedMinPrice) : undefined,
+    maxPrice: debouncedMaxPrice ? Number(debouncedMaxPrice) : undefined,
+    inStock: debouncedInStock || undefined,
+    limit: 50,
+  };
+
   const { data: productsResponse, isLoading } = useQuery({
-    queryKey: ['products', { search, sortBy, sortOrder, categoryId, slug, ...filters }],
+    queryKey: ['products', { slug, ...queryFilters }],
     queryFn: () =>
       slug
-        ? productsApi.getByCategory(slug, { page: 1, limit: 50, sortBy, sortOrder })
-        : productsApi.getAll({
-            search,
-            sortBy,
-            sortOrder,
-            categoryId,
-            minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
-            maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-            inStock: filters.inStock || undefined,
-            limit: 50,
-          }),
+        ? productsApi.getByCategory(slug, queryFilters)
+        : productsApi.getAll(queryFilters),
   });
 
   const products = productsResponse?.data?.data || [];
@@ -99,8 +114,8 @@ export function ProductsPage() {
                   <Input
                     type="number"
                     placeholder="0"
-                    value={filters.minPrice}
-                    onChange={(e) => setFilters((f) => ({ ...f, minPrice: e.target.value }))}
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
                   />
                 </div>
 
@@ -109,8 +124,8 @@ export function ProductsPage() {
                   <Input
                     type="number"
                     placeholder="9999"
-                    value={filters.maxPrice}
-                    onChange={(e) => setFilters((f) => ({ ...f, maxPrice: e.target.value }))}
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
                   />
                 </div>
 
@@ -118,14 +133,14 @@ export function ProductsPage() {
                   <input
                     type="checkbox"
                     id="inStock"
-                    checked={filters.inStock}
-                    onChange={(e) => setFilters((f) => ({ ...f, inStock: e.target.checked }))}
+                    checked={inStock}
+                    onChange={(e) => setInStock(e.target.checked)}
                     className="h-4 w-4"
                   />
                   <Label htmlFor="inStock" className="text-sm">Apenas em estoque</Label>
                 </div>
 
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => setFilters({ minPrice: '', maxPrice: '', inStock: false })}>
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => { setMinPrice(''); setMaxPrice(''); setInStock(false); }}>
                   Limpar filtros
                 </Button>
               </CardContent>
